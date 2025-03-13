@@ -1,0 +1,1 @@
+"C:\Acumatica ERP\23.216\App_Data\Projects\NCRLog\NCRLog.sln"
