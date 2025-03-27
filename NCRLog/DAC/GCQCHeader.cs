@@ -14,12 +14,13 @@ namespace NCRLog
 
 
     [PXCacheName(Messages.QualityControl)]
-    public class GCQCRecord : IBqlTable
+    [PXPrimaryGraph(typeof(GCQualityControlEntry))]
+    public class GCQCRecord : PXBqlTable, IBqlTable
     {
         #region Keys
-        public class PK : PrimaryKeyOf<GCQCRecord>.By<docNbr, batchNbr, date>
+        public class PK : PrimaryKeyOf<GCQCRecord>.By<docNbr, batchNbr>
         {
-            public static GCQCRecord Find(PXGraph graph, string docNbr, string batchNbr, DateTime date, PKFindOptions options = PKFindOptions.None) => FindBy(graph, docNbr, batchNbr, date, options);
+            public static GCQCRecord Find(PXGraph graph, string docNbr, string batchNbr, PKFindOptions options = PKFindOptions.None) => FindBy(graph, docNbr, batchNbr, options);
         }
         public static class FK
         {
@@ -36,8 +37,11 @@ namespace NCRLog
         [AutoNumber(typeof(ISOSetup.autoNumberingQC),
             typeof(GCQCRecord.date))]
         [PXSelector(typeof(GCQCRecord.docNbr),
+            typeof(GCQCRecord.batchNbr),
             typeof(GCQCRecord.date),
-            typeof(GCQCRecord.batchNbr))]
+            typeof(GCQCRecord.sOOrderNbr),
+            typeof(GCQCRecord.status),
+             ValidateValue = false)]
         [PXUIField(DisplayName = "Doc Nbr", Enabled = false)]
         public virtual string DocNbr
         {
@@ -99,7 +103,6 @@ namespace NCRLog
         }
         #endregion
 
-
         #region SOOrderNbr
         public abstract class sOOrderNbr : BqlString.Field<sOOrderNbr> { }
 
@@ -117,7 +120,7 @@ namespace NCRLog
 
         #region Date
         public abstract class date : BqlDateTime.Field<date> { }
-        [PXDBDate(IsKey = true)]
+        [PXDBDate(IsKey = true, UseSmallDateTime = true)]
         [PXDefault(typeof(AccessInfo.businessDate), PersistingCheck = PXPersistingCheck.Nothing)]
         [PXUIField(DisplayName = "Date")]
         public virtual DateTime? Date
@@ -137,6 +140,33 @@ namespace NCRLog
             set;
         }
         #endregion
+
+        #region Status
+        public abstract class status : BqlString.Field<status> { }
+
+        [PXDBString(1, IsUnicode = true)]
+        [QC.QCStatus.List]
+        [PXUIField(DisplayName = "Status")]
+        public virtual string Status
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region Hold
+        public abstract class hold : BqlBool.Field<hold> { }
+
+        [PXDBBool]
+        [PXUIField(DisplayName = "Hold")]
+        public virtual bool? Hold
+        {
+            get;
+            set;
+        }
+        #endregion
+
+
 
         #region System Fields
 
@@ -202,7 +232,31 @@ namespace NCRLog
         public abstract class noteID : PX.Data.BQL.BqlGuid.Field<noteID> { }
         #endregion
 
+
+
         #endregion
+
+        public class QC
+        {
+            public class QCStatus
+            {
+                public class List : PXStringListAttribute
+                {
+                    public static readonly (string, string)[] ValuesToLabels = new[]
+                    {
+                        (Hold, "On Hold"),
+                        (Released, "Released"),
+                        (Open, "Open"),
+                    };
+
+                    public List() : base(ValuesToLabels) { }
+                }
+
+            }
+            public const string Hold = "H";
+            public const string Released = "R";
+            public const string Open = "O";
+        }
 
     }
 }

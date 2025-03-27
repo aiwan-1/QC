@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 namespace NCRLog
 {
 	[PXCacheName(Messages.CalibrationHeader)]
-	public class CalibrationHeader : IBqlTable
-	{
+	public class CalibrationHeader : PXBqlTable, IBqlTable
+    {
         #region Keys
         public class PK : PrimaryKeyOf<CalibrationHeader>.By<docNbr>
         {

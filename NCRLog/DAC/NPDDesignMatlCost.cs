@@ -7,7 +7,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName("NPDDesignMatlCost")]
-    public class NPDDesignMatlCost : IBqlTable
+    public class NPDDesignMatlCost : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDDesignMatlCost>.By<projectNo, productTitle, matlLineNbr>
@@ -61,15 +61,17 @@ namespace NCRLog
         #endregion
 
         #region UnitCost
-        [PXDBDecimal()]
+        [PXDBDecimal(6)]
         [PXUIField(DisplayName = "Unit Cost")]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
         public virtual Decimal? UnitCost { get; set; }
         public abstract class unitCost : PX.Data.BQL.BqlDecimal.Field<unitCost> { }
         #endregion
 
         #region ExtCost
-        [PXDBDecimal()]
+        [PXDBDecimal(6)]
         [PXUIField(DisplayName = "Ext Cost")]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
         [PXFormula(typeof(Mult<unitCost,quantity>))]
         public virtual Decimal? ExtCost { get; set; }
         public abstract class extCost : PX.Data.BQL.BqlDecimal.Field<extCost> { }
@@ -85,8 +87,17 @@ namespace NCRLog
         #region Uom
         [PXDBString(6, IsUnicode = true, InputMask = "")]
         [PXUIField(DisplayName = "Unit of Measure")]
+        [PXSelector(typeof(UnitOfMeasure.unit),
+            typeof(UnitOfMeasure.descr))]
         public virtual string Uom { get; set; }
         public abstract class uom : PX.Data.BQL.BqlString.Field<uom> { }
+        #endregion
+
+        #region Selected
+        [PXBool]
+        [PXUIField(DisplayName = "Selected")]
+        public virtual bool? Selected { get; set; }
+        public abstract class selected : PX.Data.BQL.BqlBool.Field<selected> { }
         #endregion
 
         #region CreatedByID

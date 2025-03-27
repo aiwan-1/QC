@@ -17,6 +17,14 @@ namespace NCRLog
     {
         public static bool IsActive() => true;
 
+        #region Views
+        public SelectFrom<PressGlueLogHeader>.
+            Where<PressGlueLogHeader.batchNbr.IsEqual<AMBatch.batNbr.FromCurrent>>.View.ReadOnly PGLog;
+
+        public SelectFrom<GCQCRecord>.
+            Where<GCQCRecord.batchNbr.IsEqual<AMBatch.batNbr.FromCurrent>>.View.ReadOnly QC;
+        #endregion
+
         #region Actions
         private static void checkQCCheckNoteID()
         {

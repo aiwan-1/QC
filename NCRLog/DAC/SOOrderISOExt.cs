@@ -1,5 +1,6 @@
 ﻿using PX.Data;
 using PX.Data.BQL;
+using PX.Data.BQL.Fluent;
 using PX.Objects.SO;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,10 @@ namespace NCRLog
 		public abstract class usrNCRNumber : BqlString.Field<usrNCRNumber> { }
 
 		[PXDBString(15, IsUnicode = true)]
+        [PXSelector(typeof(SearchFor<ISORecord.docType>.Where<ISORecord.docType.IsEqual<Messages.nCR>>),
+            typeof(ISORecord.docType),
+            typeof(ISORecord.docNumber),
+            typeof(ISORecord.sOOrderNbr))]
 		[PXUIField(DisplayName = "NCR Number", Enabled = false)]
 		public virtual string UsrNCRNumber
 		{
@@ -29,6 +34,10 @@ namespace NCRLog
         public abstract class usrECNNumber : BqlString.Field<usrECNNumber> { }
 
         [PXDBString(15, IsUnicode = true)]
+        [PXSelector(typeof(SearchFor<ISORecord.docType>.Where<ISORecord.docType.IsEqual<Messages.eCN>>),
+            typeof(ISORecord.docType),
+            typeof(ISORecord.docNumber),
+            typeof(ISORecord.sOOrderNbr))]
         [PXUIField(DisplayName = "ECN Number", Enabled = false)]
         public virtual string UsrECNNumber
         {

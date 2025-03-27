@@ -16,7 +16,7 @@ namespace NCRLog
 {
     [PXCacheName(Messages.PressGlueLog)]
     [PXPrimaryGraph(typeof(GCPressGlueLogEntry))]
-    public class PressGlueLogHeader : IBqlTable
+    public class PressGlueLogHeader : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<PressGlueLogHeader>.By<pressNo, batchNbr>
@@ -74,7 +74,7 @@ namespace NCRLog
         [PXSelector(typeof(PressGlueLogHeader.pressNo),
             typeof(PressGlueLogHeader.siteID),
             typeof(PressGlueLogHeader.date),
-            typeof(PressGlueLogHeader.batchNbr))]
+            typeof(PressGlueLogHeader.batchNbr), ValidateValue = false)]
         [PXDBString(15, IsKey = true)]
         [PXUIField(DisplayName = "Press No", Enabled = false)]
         public virtual string PressNo
@@ -195,12 +195,13 @@ namespace NCRLog
         }
         #endregion
 
-        #region CoilRef
-        public abstract class coilRef : BqlString.Field<coilRef> { }
+        #region Hold
+        public abstract class hold : BqlBool.Field<hold> { }
 
-        [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Coil Reference")]
-        public virtual string CoilRef
+        [PXDBBool]
+        [PXDefault(true)]
+        [PXUIField(DisplayName = "Hold")]
+        public virtual bool? Hold
         {
             get;
             set;

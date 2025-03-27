@@ -15,7 +15,7 @@ using PX.TM;
 namespace NCRLog
 {
 	[PXCacheName(Messages.ECNLog)]
-	public class ECNLog : IBqlTable
+	public class ECNLog : PXBqlTable, IBqlTable
     { 
         #region Keys
         public class PK : PrimaryKeyOf<ECNLog>.By<nCRNumber, docType> 

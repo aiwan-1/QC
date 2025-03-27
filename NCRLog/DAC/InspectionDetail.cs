@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 namespace NCRLog
 {
 	[PXCacheName(Messages.Inspection)]
-	public class InspectionDetail : IBqlTable
-	{
+	public class InspectionDetail : PXBqlTable, IBqlTable
+    {
         #region Keys
         public class PK : PrimaryKeyOf<InspectionDetail>.By<docNbr, lineNbr>
         {

@@ -8,7 +8,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName("NPDStakeholder")]
-    public class NPDStakeholder : IBqlTable
+    public class NPDStakeholder : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDStakeholder>.By<projectNo, productTitle, stakeholderID>

@@ -14,7 +14,7 @@ using PX.Data.BQL.Fluent;
 namespace NCRLog
 {
     [PXCacheName(Messages.QCDetails)]
-    public class GCQCLine : IBqlTable
+    public class GCQCLine : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<GCQCLine>.By<docNbr, batchNbr, lineNbr>
@@ -23,7 +23,7 @@ namespace NCRLog
         }
         public static class FK
         {
-            public class Quality : GCQCRecord.PK.ForeignKeyOf<GCQCLine>.By<docNbr, batchNbr, tranDate> { }
+            public class Quality : GCQCRecord.PK.ForeignKeyOf<GCQCLine>.By<docNbr, batchNbr> { }
             public class Move : AMMTran.PK.ForeignKeyOf<GCQCLine>.By<batchNbr, aMProdOrdID, lineNbr > { }
         }
         #endregion

@@ -84,5 +84,21 @@ namespace NCRLog
             {
             }
         }
+
+        public class nCR : BqlString.Constant<nCR>
+        {
+            public nCR()
+                : base("NCR")
+            {
+            }
+        }
+
+        public class eCN : BqlString.Constant<eCN>
+        {
+            public eCN()
+                : base("ECN")
+            {
+            }
+        }
     }
 }

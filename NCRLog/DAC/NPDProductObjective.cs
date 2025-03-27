@@ -6,7 +6,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName("NPDProductObjective")]
-    public class NPDProductObjective : IBqlTable
+    public class NPDProductObjective : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDProductObjective>.By<projectNo, productTitle, productObjectiveID>

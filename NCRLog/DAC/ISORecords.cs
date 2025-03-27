@@ -22,7 +22,7 @@ namespace NCRLog
 {
 	[PXCacheName(Messages.ISO)]
     [PXPrimaryGraph(typeof(GilcrestMaint))]
-	public class ISORecord : IBqlTable, IAssign
+	public class ISORecord : PXBqlTable, IBqlTable, IAssign
 	{
         #region Keys
         public class PK : PrimaryKeyOf<ISORecord>.By<docNumber, docType> 
@@ -41,8 +41,8 @@ namespace NCRLog
 		[PXDBString(15, IsKey = true, IsUnicode = true, InputMask = ">CCCCCCCCCCCCCCC")]
         [AutoNumber(typeof(ISOSetup.autoNumberingType),
             typeof(ISORecord.date))]
-        /*[PXSelector(typeof(ISORecord.docNumber),
-            typeof(ISORecord.docType))]*/
+        [PXSelector(typeof(ISORecord.docNumber),
+            typeof(ISORecord.docType), ValidateValue = false)]
 		[PXUIField(DisplayName = "Doc Number")]
 		public virtual string DocNumber
         { get; set; }
@@ -59,6 +59,7 @@ namespace NCRLog
         #region DocType
         public abstract class docType : BqlString.Field<docType> { }
 		[PXDBString(3, IsKey = true, IsUnicode = true)]
+        [PXDefault("NCR")]
         [PXStringList(
 			 new string[]
 			  {

@@ -100,10 +100,10 @@
     <Compile Include="Graph\QuoteMaintCostExt.cs" />
     <Compile Include="Graph\SOOrderEntryQCExt.cs" />
     <Compile Include="Graph\SOShipmentEntryCreditHoldExt.cs" />
-    <Compile Include="Graph\SOShipmentEntryDefQtyExt.cs" />
     <Compile Include="Helper\Constants.cs" />
     <Compile Include="Helper\Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Workflow\GCQualityControlEntry_Workflow.cs" />
     <Compile Include="Workflow\NPDApprovalEntry_Workflow.cs" />
     <Compile Include="Workflow\PressGlueLogEntry_Workflow.cs" />
     <Compile Include="Workflow\SOOrderEntryWorkflowEnabledExt.cs" />

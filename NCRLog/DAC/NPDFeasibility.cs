@@ -6,7 +6,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName("NPDFeasibility")]
-    public class NPDFeasibility : IBqlTable
+    public class NPDFeasibility : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDFeasibility>.By<projectNo, productTitle, feasibilityStudyType>

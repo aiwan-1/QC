@@ -10,6 +10,7 @@ using System.IO;
 using PX.Objects.AM;
 using PX.Objects.Common.Exceptions;
 using PX.Data.Update.ExchangeService;
+using System.Collections;
 
 namespace NCRLog
 {
@@ -31,21 +32,53 @@ namespace NCRLog
         #endregion
         #endregion
 
+        #region Actions
+        public PXAction<PressGlueLogHeader> ViewBatch;
+        [PXButton, PXUIField(DisplayName = "View Manufacturing Batch")]
+        protected virtual IEnumerable viewBatch(PXAdapter adapter)
+        {
+            var entry = PXGraph.CreateInstance<MoveEntry>();
+            if (entry == null) return adapter.Get();
+
+
+            var batch = entry.batch.Search<AMBatch.batNbr>(this.Header.Current.BatchNbr);
+            if (batch == null) return adapter.Get();
+
+            entry.batch.Current = batch;
+
+            throw new PXRedirectRequiredException(entry, true, nameof(viewBatch))
+            {
+                Mode = PXBaseRedirectException.WindowMode.NewWindow
+            };
+        }
+
+        public PXAction<PressGlueLogHeader> ReleaseFromHold;
+        [PXButton, PXUIField(DisplayName = "Remove Hold")]
+        protected virtual IEnumerable releaseFromHold(PXAdapter adapter) => adapter.Get();
+
+        public PXAction<PressGlueLogHeader> PutOnHold;
+        [PXButton, PXUIField(DisplayName = "Put On Hold")]
+        protected virtual IEnumerable putOnHold(PXAdapter adapter) => adapter.Get();
+
+        public PXAction<PressGlueLogHeader> Release;
+        [PXButton, PXUIField(DisplayName = "Release")]
+        protected virtual IEnumerable release(PXAdapter adapter) => adapter.Get();
+        #endregion
 
         #region Event Handlers
-      /*  protected virtual void _(Events.FieldUpdated<PressGlueLogHeader, PressGlueLogHeader.siteID> e)
-        {
-            PressGlueLogHeader row = e.Row;
+        /*  protected virtual void _(Events.FieldUpdated<PressGlueLogHeader, PressGlueLogHeader.siteID> e)
+          {
+              PressGlueLogHeader row = e.Row;
 
-            PressGlueLogHeader header = SelectFrom<PressGlueLogHeader>.
-                Where<PressGlueLogHeader.date.IsEqual<@P.AsDateTime>>.View.Select(this, row.Date);
+              PressGlueLogHeader header = SelectFrom<PressGlueLogHeader>.
+                  Where<PressGlueLogHeader.date.IsEqual<@P.AsDateTime>>.View.Select(this, row.Date);
 
-            e.Cache.SetValueExt<PressGlueLogHeader.glueManufacturer>(row, header.GlueManufacturer);
-            e.Cache.SetValueExt<PressGlueLogHeader.glueSetting>(row, header.GlueSetting);
-            e.Cache.SetValueExt<PressGlueLogHeader.diffPressure>(row, header.DiffPressure);
-            e.Cache.SetValueExt<PressGlueLogHeader.resultg>(row, header.Resultg);
+              e.Cache.SetValueExt<PressGlueLogHeader.glueManufacturer>(row, header.GlueManufacturer);
+              e.Cache.SetValueExt<PressGlueLogHeader.glueSetting>(row, header.GlueSetting);
+              e.Cache.SetValueExt<PressGlueLogHeader.diffPressure>(row, header.DiffPressure);
+              e.Cache.SetValueExt<PressGlueLogHeader.resultg>(row, header.Resultg);
 
-        }*/
+          }*/
 
         protected virtual void _(Events.FieldUpdated<PressGlueLogDetails, PressGlueLogDetails.pressTimeMins> e)
         {
@@ -53,12 +86,12 @@ namespace NCRLog
 
             if (row.OpenTimeMin != null && row.PressTimeMins != null)
             {
-                
+
                 var cureTime = row.PressTimeMins + row.OpenTimeMin;
 
                 e.Cache.SetValueExt<PressGlueLogDetails.cureTimeMins>(row, cureTime);
-                
-                
+
+
             }
         }
 
@@ -66,23 +99,23 @@ namespace NCRLog
         {
             PressGlueLogDetails row = e.Row;
 
-            if(row.StartTimePress != null && row.ExitTimePress != null)
+            if (row.StartTimePress != null && row.ExitTimePress != null)
             {
                 TimeSpan pressTime = row.ExitTimePress.Value - row.StartTimePress.Value;
                 if ((int)pressTime.TotalMinutes > 0)
                 {
                     e.Cache.SetValueExt<PressGlueLogDetails.pressTimeMins>(row, (int)pressTime.TotalMinutes);
                 }
-                if((int)pressTime.TotalMinutes < 0)
+                if ((int)pressTime.TotalMinutes < 0)
                 {
-                   DateTime exit =  (DateTime)row.ExitTimePress;
+                    DateTime exit = (DateTime)row.ExitTimePress;
                     DateTime exitTime = exit.AddDays(1);
                     DateTime? time = exitTime;
 
                     TimeSpan totalTime = (row.StartTimePress.Value - time.Value);
 
                     int timeSpan = 24 - (int)totalTime.TotalMinutes;
-                        
+
                     e.Cache.SetValueExt<PressGlueLogDetails.pressTimeMins>(row, timeSpan);
                 }
             }
@@ -95,7 +128,7 @@ namespace NCRLog
             if (row.FirstTime != null && row.LastTime != null)
             {
                 TimeSpan openTime = row.LastTime.Value - row.FirstTime.Value;
-                
+
                 e.Cache.SetValueExt<PressGlueLogDetails.openTimeMin>(row, (int)openTime.TotalMinutes);
             }
 
@@ -150,7 +183,7 @@ namespace NCRLog
 
             //TODO: When temp = x, Total Cure time is y
         }*/
-        
+
 
         #endregion
     }

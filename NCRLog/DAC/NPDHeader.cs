@@ -13,7 +13,7 @@ namespace NCRLog
     [Serializable]
     [PXCacheName("NPDHeader")]
     [PXPrimaryGraph(typeof(NPDApprovalEntry))]
-    public class NPDHeader : IBqlTable
+    public class NPDHeader : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDHeader>.By<projectNo, productTitle>
@@ -272,6 +272,12 @@ namespace NCRLog
         #region AwaitingApproval
         public abstract class awaitingApproval : BqlBool.Field<awaitingApproval> { }
         [PXBool]
+        //[PXFormula(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.awaiting>>, True,
+        //    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.awaiting>>, False>>>))]
+        [PXUnboundDefault(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.awaiting>.
+                Or<NPDHeader.status.IsEqual<NPDApprovalStatus.approved>>>, True,
+                    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.awaiting>.
+                        Or<NPDHeader.status.IsNotEqual<NPDApprovalStatus.approved>>>, False>>>))]
         [PXUIField(DisplayName = "AwaitingApproval")]
         public virtual bool? AwaitingApproval
         {
@@ -282,8 +288,11 @@ namespace NCRLog
 
         #region IntroductoryNP
         public abstract class introductoryNP : BqlBool.Field<introductoryNP> { }
-
         [PXBool]
+        //[PXFormula(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.introductory>>, True,
+        //    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.introductory>>, False>>>))]
+        [PXUnboundDefault(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.introductory>>, True,
+            Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.introductory>>, False>>>))]
         [PXUIField(DisplayName = "IntroductoryNP")]
         public virtual bool? IntroductoryNP
         {
@@ -294,8 +303,11 @@ namespace NCRLog
 
         #region DesignNP
         public abstract class designNP : BqlBool.Field<designNP> { }
-
         [PXBool]
+        //[PXFormula(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.design>>, True,
+        //    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.design>>, False>>>))]
+        [PXUnboundDefault(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.design>>, True,
+            Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.design>>, False>>>))]
         [PXUIField(DisplayName = "DesignNP")]
         public virtual bool? DesignNP
         {
@@ -306,8 +318,11 @@ namespace NCRLog
 
         #region ResearchNP
         public abstract class researchNP : BqlBool.Field<researchNP> { }
-
         [PXBool]
+        //[PXFormula(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.research>>, True,
+        //    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.research>>, False>>>))]
+        [PXUnboundDefault(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.research>>, True,
+            Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.research>>, False>>>))]
         [PXUIField(DisplayName = "ResearchNP")]
         public virtual bool? ResearchNP
         {
@@ -318,9 +333,12 @@ namespace NCRLog
 
         #region FeasibilityNP
         public abstract class feasibilityNP : BqlBool.Field<feasibilityNP> { }
-
         [PXBool]
-        //[PXUIField(DisplayName = "FeasibilityNP")]
+        //[PXFormula(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.feasibility>>, True,
+        //    Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.feasibility>>, False>>>))]
+        [PXUnboundDefault(typeof(Switch<Case<Where<NPDHeader.status.IsEqual<NPDApprovalStatus.feasibility>>, True,
+            Case<Where<NPDHeader.status.IsNotEqual<NPDApprovalStatus.feasibility>>, False>>>))]
+        [PXUIField(DisplayName = "FeasibilityNP")]
         public virtual bool? FeasibilityNP
         {
             get;

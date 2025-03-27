@@ -8,7 +8,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName("NPDRisks")]
-    public class NPDRisks : IBqlTable
+    public class NPDRisks : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDRisks>.By<projectNo, productTitle, findingID, riskid>

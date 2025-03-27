@@ -15,7 +15,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName(Messages.NCRLog)]
-    public class NCRLog : IBqlTable
+    public class NCRLog : PXBqlTable, IBqlTable
     { 
       #region Keys
        public class PK : PrimaryKeyOf<NCRLog>.By<nCRNumber, docType> 

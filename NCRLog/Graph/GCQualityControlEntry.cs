@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using PX.Objects.AM;
+using System.Collections;
 
 namespace NCRLog
 {
@@ -25,10 +26,59 @@ namespace NCRLog
 
         #region Graph Constructor
 
-        public GCQualityControlEntry() 
+        public GCQualityControlEntry()
         {
             ISOSetup setup = AutoNumSetup.Current;
         }
+        #endregion
+
+        #region Actions
+        public PXAction<GCQCRecord> ViewBatch;
+        [PXButton, PXUIField(DisplayName = "View Manufacturing Batch")]
+        protected virtual IEnumerable viewBatch(PXAdapter adapter)
+        {
+            var entry = PXGraph.CreateInstance<MoveEntry>();
+            if (entry == null) return adapter.Get();
+
+
+            var batch = entry.batch.Search<AMBatch.batNbr>(this.QCCheck.Current.BatchNbr);
+            if (batch == null) return adapter.Get();
+
+            entry.batch.Current = batch;
+
+            throw new PXRedirectRequiredException(entry, true, nameof(viewBatch))
+            {
+                Mode = PXBaseRedirectException.WindowMode.NewWindow
+            };
+        }
+
+        public PXAction<GCQCRecord> ViewOrder;
+        [PXButton, PXUIField(DisplayName = "View Sales Order")]
+        protected virtual IEnumerable viewOrder(PXAdapter adapter)
+        {
+            var entry = PXGraph.CreateInstance<SOOrderEntry>();
+            if (entry == null) return adapter.Get();
+
+            var order = entry.Document.Search<SOOrder.orderNbr>(this.QCCheck.Current.SOOrderNbr);
+            if (order == null) return adapter.Get();
+
+            throw new PXRedirectRequiredException(entry, true, nameof(viewOrder))
+            {
+                Mode = PXBaseRedirectException.WindowMode.NewWindow
+            };
+        }
+
+        public PXAction<GCQCRecord> ReleaseFromHold;
+        [PXButton, PXUIField(DisplayName = "Remove Hold")]
+        protected virtual IEnumerable releaseFromHold(PXAdapter adapter) => adapter.Get();
+
+        public PXAction<GCQCRecord> PutOnHold;
+        [PXButton, PXUIField(DisplayName = "Put On Hold")]
+        protected virtual IEnumerable putOnHold(PXAdapter adapter) => adapter.Get();
+
+        public PXAction<GCQCRecord> Release;
+        [PXButton, PXUIField(DisplayName = "Release")]
+        protected virtual IEnumerable release(PXAdapter adapter) => adapter.Get();
         #endregion
 
         #region Events
@@ -44,8 +94,8 @@ namespace NCRLog
 
             if (order == null) return;
 
-                e.Cache.SetValueExt<GCQCRecord.customerID>(row, order.CustomerID);
-            
+            e.Cache.SetValueExt<GCQCRecord.customerID>(row, order.CustomerID);
+
         }
 
 

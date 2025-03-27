@@ -12,7 +12,7 @@ using System.Management.Instrumentation;
 namespace NCRLog
 {
     [PXCacheName(Messages.PressGlueLog)]
-    public class PressGlueLogDetails : IBqlTable
+    public class PressGlueLogDetails : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<PressGlueLogDetails>.By<pressNo, batchNbr, lineNbr>
@@ -310,6 +310,41 @@ namespace NCRLog
         }
         #endregion
 
+        #region CoilRefFront
+        public abstract class coilRefFront : BqlString.Field<coilRefFront> { }
+
+        [PXDBString(64, IsUnicode = true)]
+        [PXUIField(DisplayName = "Coil Ref. (Front)")]
+        public virtual string CoilRefFront
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region CoilRefBack
+        public abstract class coilRefBack : BqlString.Field<coilRefBack> { }
+
+        [PXDBString(64, IsUnicode = true)]
+        [PXUIField(DisplayName = "Coil Ref. (Back)")]
+        public virtual string CoilRefBack
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region SpectroVal
+        public abstract class spectroVal : BqlInt.Field<spectroVal> { }
+
+        [PXDBInt]
+        [PXUIField(DisplayName = "Spectrometre Value (δe)")]
+        public virtual int? SpectroVal
+        {
+            get;
+            set;
+        }
+        #endregion
 
 
 

@@ -8,6 +8,14 @@ using static NCRLog.NPD;
 using PX.Objects.PO;
 using PX.TM;
 using PX.SM;
+using System.Runtime.CompilerServices;
+using PX.Objects.CN.Common.Extensions;
+using PX.Objects.AM.Attributes;
+using System.Runtime.InteropServices.WindowsRuntime;
+using PX.Objects.IN;
+using PX.Objects.TX;
+using System;
+using static PX.Objects.EP.EPApprovalProcess;
 
 namespace NCRLog
 {
@@ -118,6 +126,64 @@ namespace NCRLog
         protected virtual IEnumerable toIntroductory(PXAdapter adapter)
             => adapter.Get();
         #endregion
+
+        public PXAction<NPDDesignMatlCost> CreateInventoryItem;
+        [PXButton]
+        [PXUIField(DisplayName = "Create Inventory")]
+        public virtual IEnumerable createInventoryItem(PXAdapter adapter)
+        {
+            if (this.DesignMatlCost.Current == null)
+            {
+                // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
+                throw new PXSetPropertyException<NPDDesignMatlCost.nonInventoryID>("Current Records are empty, please fill in and try again", PXErrorLevel.Error);
+                //PXTrace.WriteError("There is no current item to create from");
+            }
+
+            foreach (NPDDesignMatlCost line in this.DesignMatlCost.Select())
+            {
+                if (line.Selected == true)
+                {
+                    try
+                    {
+                        InventoryItemMaint itemMaint = PXGraph.CreateInstance<InventoryItemMaint>();
+                        var header = new InventoryItem();
+                        header.InventoryCD = line.NonInventoryID;
+                        header.Descr = line.NonInventoryID + line.ProjectNo + line.ProductTitle;
+                        itemMaint.Item.Insert(header);
+
+                        var settings = header;
+                        settings.ItemClassID = 103;
+                        settings.TaxCategoryID = "STANDARD";
+                        settings.PostClassID = "COMPONENTS";
+                        settings.LotSerClassID = "NOTTRACKED";
+                        settings.BaseUnit = line.Uom;
+                        settings.SalesUnit = line.Uom;
+                        settings.PurchaseUnit = line.Uom;
+                        settings.InvtAcctID = 1001;
+                        settings.SalesAcctID = 4000;
+                        settings.COGSAcctID = 5020;
+                        settings.StdCstVarAcctID = 5090;
+                        settings.POAccrualAcctID = 2109;
+                        itemMaint.ItemSettings.Insert(settings);
+
+                        itemMaint.Actions.PressSave();
+
+                        throw new PXRedirectRequiredException(itemMaint, "Redirect Successful");
+                    }
+                    catch (Exception ex) 
+                    {
+                        // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
+                        // Acuminator disable once PX1051 NonLocalizableString [Justification]
+                        throw new PXSetPropertyException<NPDDesignMatlCost.nonInventoryID>(ex.Message, PXErrorLevel.Error);
+                    }
+                    
+                }
+                else continue;
+            }
+
+
+            return adapter.Get();
+        }
         #endregion
 
         #region Events
@@ -127,7 +193,65 @@ namespace NCRLog
             if (row == null) return;
 
             row.Version++;
+
+            /*if (row.Status == NPDApprovalStatus.Awaiting || row.Status == NPDApprovalStatus.Approved)
+            {
+                row.AwaitingApproval = true;
+            }
+            else
+            {
+                row.AwaitingApproval = false;
+            }
+
+            if (row.Status == NPDApprovalStatus.Design)
+            {
+                row.DesignNP = true;
+            }
+            else
+            {
+                row.DesignNP = false;
+            }
+
+            if (row.Status == NPDApprovalStatus.Introductory)
+            {
+                row.IntroductoryNP = true;
+            }
+            else
+            {
+                row.IntroductoryNP = false;
+            }
+
+            if (row.Status == NPDApprovalStatus.Research)
+            {
+                row.ResearchNP = true;
+            }
+            else
+            {
+                row.ResearchNP = false;
+            }
+
+            if (row.Status == NPDApprovalStatus.Feasibility)
+            {
+                row.FeasibilityNP = true;
+            }
+            else
+            {
+                row.FeasibilityNP = false;
+            }*/
+
         }
+
+       /* protected virtual void _(Events.RowSelecting<NPDHeader> e)
+        {
+            NPDHeader row = e.Row;
+            if (row == null) return;
+
+            e.Cache.SetDefaultExt<NPDHeader.awaitingApproval>(row);
+            e.Cache.SetDefaultExt<NPDHeader.introductoryNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.designNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.feasibilityNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.researchNP>(row);
+        }*/
 
         protected virtual void _(Events.FieldUpdated<NPDStakeholder, NPDStakeholder.stakeholderID> e)
         {
@@ -148,10 +272,10 @@ namespace NCRLog
 
         protected virtual void _(Events.RowSelected<NPDHeader> e)
         {
-            NPDHeader row = e.Row; 
+            NPDHeader row = e.Row;
             if (row == null) return;
 
-           
+
             ApproveIntroductory.SetEnabled(IsNPDApprover("NPDApprover", this));
             ApproveDesign.SetEnabled(IsNPDApprover("NPDApprover", this));
             ApproveFeasibility.SetEnabled(IsNPDApprover("NPDApprover", this));
@@ -164,60 +288,17 @@ namespace NCRLog
             PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByIntroductory>(e.Cache, row, false);
             PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByResearch>(e.Cache, row, false);
 
-            if(row.Status == NPDApprovalStatus.Awaiting || row.Status == NPDApprovalStatus.Approved)
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.AwaitingApproval = true;
-            }
-            else 
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.AwaitingApproval = false; 
-            }
+            PXUIFieldAttribute.SetVisible<NPDHeader.awaitingApproval>(e.Cache, row, IsAdmin("Administrator", this));
+            PXUIFieldAttribute.SetVisible<NPDHeader.designNP>(e.Cache, row, IsAdmin("Administrator", this)); 
+            PXUIFieldAttribute.SetVisible<NPDHeader.feasibilityNP>(e.Cache, row, IsAdmin("Administrator", this));
+            PXUIFieldAttribute.SetVisible<NPDHeader.introductoryNP>(e.Cache, row, IsAdmin("Administrator", this));
+            PXUIFieldAttribute.SetVisible<NPDHeader.researchNP>(e.Cache, row, IsAdmin("Administrator", this));
 
-            if (row.Status == NPDApprovalStatus.Design)
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.DesignNP = true;
-            }
-            else
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.DesignNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Introductory)
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.IntroductoryNP = true;
-            }
-            else
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.IntroductoryNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Research)
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.ResearchNP = true;
-            }
-            else
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.ResearchNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Feasibility)
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.FeasibilityNP = true;
-            }
-            else
-            {
-                // Acuminator disable once PX1047 RowChangesInEventHandlersForbiddenForArgs [Justification]
-                row.FeasibilityNP = false;
-            }
+            e.Cache.SetDefaultExt<NPDHeader.awaitingApproval>(row);
+            e.Cache.SetDefaultExt<NPDHeader.introductoryNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.designNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.feasibilityNP>(row);
+            e.Cache.SetDefaultExt<NPDHeader.researchNP>(row);
         }
 
         protected virtual void _(Events.FieldUpdated<NPDHeader, NPDHeader.status> e)
@@ -225,35 +306,49 @@ namespace NCRLog
             NPDHeader row = e.Row;
             if (row == null) return;
 
-            if((string)e.NewValue == "R")
+            if((string)e.NewValue == NPDApprovalStatus.Research && row.Introductory == true)
             {
                 e.Cache.SetValueExt<NPDHeader.approvedByIntroductory>(row, Accessinfo.DisplayName);
             }
 
-            if ((string)e.NewValue == "D")
+            if ((string)e.NewValue == NPDApprovalStatus.Design && row.Research == true)
             {
                 e.Cache.SetValueExt<NPDHeader.approvedByResearch>(row, Accessinfo.DisplayName);
             }
 
-            if ((string)e.NewValue == "F")
+            if ((string)e.NewValue == NPDApprovalStatus.Feasibility && row.Design == true)
             {
                 e.Cache.SetValueExt<NPDHeader.approvedByDesign>(row, Accessinfo.DisplayName);
             }
 
-            if ((string)e.NewValue == "W")
+            if ((string)e.NewValue == NPDApprovalStatus.Awaiting && row.Feasibility == true)
             {
                 e.Cache.SetValueExt<NPDHeader.approvedByFeasibility>(row, Accessinfo.DisplayName);
             }
 
-            if ((string)e.NewValue == "A")
+            if ((string)e.NewValue == NPDApprovalStatus.Approved)
             {
                 e.Cache.SetValueExt<NPDHeader.approvedBy>(row, Accessinfo.DisplayName);
             }
+
         }
         #endregion
 
         #region Methods
         public static bool IsNPDApprover(string roleName, PXGraph graph)
+        {
+            string usrName = graph.Accessinfo.UserName;
+
+            UsersInRoles assignedRoles = SelectFrom<UsersInRoles>.
+                Where<UsersInRoles.username.IsEqual<P.AsString>.
+                And<UsersInRoles.rolename.IsEqual<P.AsString>>>.View.Select(graph, usrName, roleName);
+            if (assignedRoles == null)
+                return false;
+
+            else return true;
+        }
+
+        public static bool IsAdmin(string roleName, PXGraph graph)
         {
             string usrName = graph.Accessinfo.UserName;
 

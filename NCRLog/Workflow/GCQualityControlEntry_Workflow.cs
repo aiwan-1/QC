@@ -1,29 +1,26 @@
 ﻿using PX.Data;
 using PX.Data.BQL;
-using PX.Data.BQL.Fluent;
-using static PX.Data.WorkflowAPI.BoundedTo<NCRLog.GCPressGlueLogEntry,
-    NCRLog.PressGlueLogHeader>;
+using PX.Data.WorkflowAPI;
+using PX.Objects.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PX.Data.WorkflowAPI;
-using PX.Objects.Common;
 
 namespace NCRLog
 {
-    using State = PressGlueLogHeader.PGLog.PGLogStatus.ListAttribute;
-    using Constant = PressGlueLogHeader.PGLog;
+    using State = GCQCRecord.QC.QCStatus;
+    using static BoundedTo<GCQualityControlEntry, GCQCRecord>;
     // Acuminator disable once PX1016 ExtensionDoesNotDeclareIsActiveMethod extension should be constantly active
-    public class PressGlueLogEntry_Workflow : PXGraphExtension<GCPressGlueLogEntry>
+    public class GCQualityControlEntry_Workflow : PXGraphExtension<GCQualityControlEntry>
     {
         #region Constants
         public static class States
         {
-            public const string Hold = Constant.Hold;
-            public const string Released = Constant.Released;
-            public const string Open = Constant.Open;
+            public const string Hold = Constants.Hold;
+            public const string Released = Constants.Released;
+            public const string Open = Constants.Open;
 
 
             public class hold : BqlString.Constant<hold>
@@ -42,8 +39,8 @@ namespace NCRLog
         }
         #endregion
 
-        protected static void Configure(WorkflowContext<GCPressGlueLogEntry,
-            PressGlueLogHeader> context)
+        protected static void Configure(WorkflowContext<GCQualityControlEntry,
+            GCQCRecord> context)
         {
             #region Categories
             var commonCategories = CommonActionCategories.Get(context);
@@ -53,7 +50,7 @@ namespace NCRLog
             var conditions = context.Conditions.GetPack<Conditions>();
 
             context.AddScreenConfigurationFor(screen => screen
-                .StateIdentifierIs<PressGlueLogHeader.status>()
+                .StateIdentifierIs<GCQCRecord.status>()
                 .AddDefaultFlow(flow =>
                 {
                     return flow
@@ -88,7 +85,7 @@ namespace NCRLog
                             })
                             .WithFieldStates(fs =>
                             {
-                                fs.AddTable<PressGlueLogDetails>(a => a.IsDisabled());
+                                fs.AddTable<GCQCLine>(a => a.IsDisabled());
                             });
                         });
                         flowStates.Add<States.released>(flowState =>
@@ -98,10 +95,11 @@ namespace NCRLog
                             {
                                 actions.Add(g => g.PutOnHold);
                                 actions.Add(g => g.ViewBatch);
+                                actions.Add(g => g.ViewOrder);
                             })
                             .WithFieldStates(fs =>
                             {
-                                fs.AddTable<PressGlueLogDetails>(a => a.IsDisabled());
+                                fs.AddTable<GCQCLine>(a => a.IsDisabled());
                             });
 
                         });
@@ -115,7 +113,7 @@ namespace NCRLog
                             .IsTriggeredOn(g => g.ReleaseFromHold)
                             .WithFieldAssignments(fas =>
                             {
-                                fas.Add<PressGlueLogHeader.hold>(false);
+                                fas.Add<GCQCRecord.hold>(false);
                             })
                         );
                         transitions.Add(t => t.From<States.open>()
@@ -123,7 +121,7 @@ namespace NCRLog
                             .IsTriggeredOn(g => g.PutOnHold)
                             .WithFieldAssignments(fas =>
                             {
-                                fas.Add<PressGlueLogHeader.hold>(true);
+                                fas.Add<GCQCRecord.hold>(true);
                             })
                         );
                         transitions.Add(t => t.From<States.open>()
@@ -136,7 +134,7 @@ namespace NCRLog
                             .IsTriggeredOn(g => g.PutOnHold)
                             .WithFieldAssignments(fas =>
                             {
-                                fas.Add<PressGlueLogHeader.hold>(true);
+                                fas.Add<GCQCRecord.hold>(true);
                             })
                         );
                     });
@@ -165,40 +163,41 @@ namespace NCRLog
                         .WithCategory(processingCategory)
 
                     );
-                    actions.Add(g => g.ViewBatch, c => c
-                        .WithCategory(processingCategory)
+                    actions.Add(g => g.ViewBatch
+
+                    );
+                    actions.Add(g => g.ViewOrder
+
                     );
                 })
             #endregion
-            /*.WithForms(forms =>
-            {
-                forms.Add(form =>
-                {
-                    form
-                })
-            })*/
             );
         }
+
+        public override void Configure(PXScreenConfiguration config)
+        {
+            Configure(config.GetScreenConfigurationContext<GCQualityControlEntry,
+                GCQCRecord>());
+        }
+
         #region Conditions
         public class Conditions : Condition.Pack
         {
             public Condition NotOpen => GetOrCreate(b => b.
-                FromBql<Where<PressGlueLogHeader.status.IsNotEqual<States.open>>>()
+                FromBql<Where<GCQCRecord.status.IsNotEqual<States.open>>>()
             );
 
             public Condition IsNotOnHold => GetOrCreate(b => b.
-                FromBql<Where<PressGlueLogHeader.status.IsNotEqual<States.hold>>>()
+                FromBql<Where<GCQCRecord.status.IsNotEqual<States.hold>>>()
             );
             public Condition IsOnHold => GetOrCreate(b => b.
-                FromBql<Where<PressGlueLogHeader.status.IsEqual<States.hold>>>()
+                FromBql<Where<GCQCRecord.status.IsEqual<States.hold>>>()
+            );
+
+            public Condition NoOwner => GetOrCreate(b => b.
+                FromBql<Where<GCQCRecord.owner.IsNull>>()
             );
         }
         #endregion
-
-        public sealed override void Configure(PXScreenConfiguration config)
-        {
-            Configure(config.GetScreenConfigurationContext<GCPressGlueLogEntry,
-                PressGlueLogHeader>());
-        }
     }
 }

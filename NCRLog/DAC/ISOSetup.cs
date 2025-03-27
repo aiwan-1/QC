@@ -12,7 +12,7 @@ namespace NCRLog
 {
 	[PXCacheName(Messages.ISOSetup)]
 	[PXPrimaryGraph(typeof(QualityControlSetupMaint))]
-	public class ISOSetup : IBqlTable
+	public class ISOSetup : PXBqlTable, IBqlTable
     {
         #region AutoNumberingType
 		public abstract class autoNumberingType : BqlString.Field<autoNumberingType> { }

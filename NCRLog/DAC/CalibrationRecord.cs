@@ -12,7 +12,7 @@ namespace NCRLog
 {
     [Serializable]
     [PXCacheName(Messages.Calibration)]
-    public class CalibrationRecord : IBqlTable
+    public class CalibrationRecord : PXBqlTable, IBqlTable
     {
         #region Keys
         public class PK : PrimaryKeyOf<CalibrationRecord>.By<refNbr>
