@@ -21,7 +21,7 @@ namespace NCRLog
     // Acuminator disable once PX1016 ExtensionDoesNotDeclareIsActiveMethod extension should be constantly active
     public class SOOrderEntryQCExt : PXGraphExtension<SOOrderEntry>
     {
-       
+
 
         public SelectFrom<GCQCLine>.
             RightJoin<GCQCRecord>.
@@ -41,7 +41,7 @@ namespace NCRLog
         [PXUIField(DisplayName = "Create NCR"/*, MapEnableRights = PXCacheRights.Select, MapViewRights = PXCacheRights.Select*/)]
         protected virtual IEnumerable createNCRAction(PXAdapter adapter)
         {
-            List<SOOrder> list = new List<SOOrder>();  
+            List<SOOrder> list = new List<SOOrder>();
             foreach (SOOrder order in adapter.Get<SOOrder>())
             {
                 list.Add(order);
@@ -56,7 +56,7 @@ namespace NCRLog
             });
 
             return adapter.Get();
-            
+
         }
 
         private static void CreateNCR(SOOrder order)
@@ -185,13 +185,13 @@ namespace NCRLog
                 CreateNCRAction.SetEnabled(false);
                 CreateECNAction.SetVisible(false);
                 CreateECNAction.SetEnabled(false);
-                
+
             }
-            if(row.Status == "N" || row.Status == "H" || row.Status == "Y" || row.Status == "Z" || row.Status == "X" )
+            if (row.Status == "N" || row.Status == "H" || row.Status == "Y" || row.Status == "Z" || row.Status == "X")
             {
                 PXUIFieldAttribute.SetEnabled<SOOrder.freightCost>(e.Cache, row, true);
             }
-            if(row.Status == "S")
+            if (row.Status == "S")
             {
                 PXUIFieldAttribute.SetEnabled(e.Cache, row, false);
             }
@@ -207,14 +207,14 @@ namespace NCRLog
             SOOrder order = SelectFrom<SOOrder>.
                 Where<SOOrder.orderType.IsEqual<P.AsString>.
                 And<SOOrder.orderNbr.IsEqual<P.AsString>>>.View.Select(Base, row.OrderType, row.OrderNbr);
-            if(order == null) return;
+            if (order == null) return;
 
-            if(row.ShippedQty > 0)
+            if (row.ShippedQty > 0)
             {
                 PXUIFieldAttribute.SetEnabled(e.Cache, e.Row, false);
+                PXUIFieldAttribute.SetEnabled<SOLine.orderQty>(e.Cache, e.Row, true);
             }
         }
-
         #endregion
 
        

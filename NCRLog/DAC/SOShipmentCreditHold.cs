@@ -23,6 +23,7 @@ namespace NCRLog
 
 		[PXDBBool]
 		[PXUIField(DisplayName = "Credit Hold", Enabled = false, Visible = false)]
+		[PXDefault(true, PersistingCheck = PXPersistingCheck.Nothing)]
 		public virtual bool? UsrCreditHold
 		{
 			get;

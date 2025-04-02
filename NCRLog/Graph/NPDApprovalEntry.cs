@@ -276,7 +276,7 @@ namespace NCRLog
             if (row == null) return;
 
 
-            ApproveIntroductory.SetEnabled(IsNPDApprover("NPDApprover", this));
+            //ApproveIntroductory.SetEnabled(IsNPDApprover("NPDApprover", this));
             ApproveDesign.SetEnabled(IsNPDApprover("NPDApprover", this));
             ApproveFeasibility.SetEnabled(IsNPDApprover("NPDApprover", this));
             ApproveResearch.SetEnabled(IsNPDApprover("NPDApprover", this));
@@ -331,6 +331,17 @@ namespace NCRLog
                 e.Cache.SetValueExt<NPDHeader.approvedBy>(row, Accessinfo.DisplayName);
             }
 
+        }
+
+        protected virtual void _(Events.FieldUpdated<NPDDesignMatlCost, NPDDesignMatlCost.inventoryID> e)
+        {
+            NPDDesignMatlCost row = e.Row;
+            if (row == null) return;
+
+            InventoryItemCurySettings item = SelectFrom<InventoryItemCurySettings>.Where<InventoryItemCurySettings.inventoryID.IsEqual<P.AsInt>>.View.Select(this, row.InventoryID);
+            if (item == null) return;
+
+            e.Cache.SetValueExt<NPDDesignMatlCost.unitCost>(row, item.StdCost);
         }
         #endregion
 

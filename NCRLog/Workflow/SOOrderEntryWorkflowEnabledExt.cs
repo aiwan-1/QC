@@ -12,8 +12,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//using Tabs;
 using PX.Objects.PO;
 using PX.Objects.CN.Common.Extensions;
+using PX.Objects.AM.GraphExtensions;
 
 namespace NCRLog
 {
@@ -42,13 +44,12 @@ namespace NCRLog
 
         public static void EnableSOLine(FieldState.IContainerFillerFields states)
         {
-            states.AddTable<SOOrder>(state => state.IsDisabled());
             states.AddTable<SOTaxTran>(state => state.IsDisabled());
-            states.AddTable<SOBillingAddress>(state => state.IsDisabled());
-            states.AddTable<SOBillingContact>(state => state.IsDisabled());
-            states.AddTable<SOShippingAddress>(state => state.IsDisabled());
-            states.AddTable<SOShippingContact>(state => state.IsDisabled());
             states.AddTable<CRRelation>(state => state.IsDisabled());
+            states.AddTable<ISORecord>(state => state.IsDisabled());
+            states.AddTable<GCQCRecord>(state => state.IsDisabled());
+            states.AddTable<SOOrderShipment>(state => state.IsDisabled());
+
         }
 
 
@@ -86,11 +87,15 @@ namespace NCRLog
                                     handlers.Add(g => g.OnShipmentUnlinked);
                                     handlers.Add(g => g.OnShipmentConfirmed);
                                 })
+                                .WithActions(actions =>
+                                {
+                                    actions.Add<SOOrderEntryAMExtension>(g => g.CreateProdOrder);
+                                })
                                 .WithFieldStates(EnableSOLine);
                         });
                     }));
-                })); 
+                }));
         }
-      
+
     }
 }

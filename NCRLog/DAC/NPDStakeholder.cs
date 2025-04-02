@@ -43,7 +43,7 @@ namespace NCRLog
         [PXDefault]
         [PXSelector(
             typeof(EPEmployee.acctName),
-            typeof(EPEmployee.departmentID))]
+            typeof(EPEmployee.departmentID), ValidateValue = false)]
         [PXUIField(DisplayName = "Stakeholder ID")]
         public virtual string StakeholderID { get; set; }
         public abstract class stakeholderID : PX.Data.BQL.BqlString.Field<stakeholderID> { }

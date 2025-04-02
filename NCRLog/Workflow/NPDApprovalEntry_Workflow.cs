@@ -279,7 +279,7 @@ namespace NCRLog
                     {
                         transitons.Add(t => t.From<State.introductory>()
                             .To<State.research>()
-                            .IsTriggeredOn(g => g.ApproveIntroductory)
+                            .IsTriggeredOn(g => g.ToResearch)
                             .WithFieldAssignments(fas =>
                             {
                                 fas.Add<NPDHeader.introductory>(true);

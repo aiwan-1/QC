@@ -9,6 +9,10 @@ namespace NCRLog
     [PXCacheName("NPDDesignMatlCost")]
     public class NPDDesignMatlCost : PXBqlTable, IBqlTable
     {
+
+        // TODO: Capex field
+        // TODO: Opex field
+        // TODO: Total Cost fields, Opex, Capex, Material, Total
         #region Keys
         public class PK : PrimaryKeyOf<NPDDesignMatlCost>.By<projectNo, productTitle, matlLineNbr>
         {
