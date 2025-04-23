@@ -10,6 +10,7 @@ using PX.Data.WorkflowAPI;
 using PX.Objects.AR;
 using System.Collections;
 using PX.Data.BQL.Fluent;
+using PX.Objects.CR;
 using PX.SM;
 using PX.EP;
 
@@ -57,78 +58,55 @@ namespace NCRLog
         #endregion
 
         #region Events
-        protected virtual void _(Events.FieldUpdated<ARBalances.currentBal> e, PXFieldUpdated b)
-        {
-            b?.Invoke(e.Cache, e.Args);
-            ARBalances row = (ARBalances)e.Row;
-            if (row == null) return;
-
-            SOShipment shipment = SelectFrom<SOShipment>.
-                Where<SOShipment.customerID.IsEqual<P.AsInt>.
-                And<SOShipment.customerLocationID.IsEqual<P.AsInt>>>.View.Select(Base, row.CustomerID, row.CustomerLocationID);
-
-
-            Customer customer = SelectFrom<Customer>.
-                Where<Customer.bAccountID.IsEqual<P.AsInt>>.View.Select(Base, row.CustomerID);
-            if (customer == null) return;
-
-            var creditLimit = customer.CreditLimit;
-
-            var balance = creditLimit - ((row.CurrentBal ?? 0) + (row.TotalOpenOrders ?? 0) + (row.TotalShipped ?? 0) - (row.TotalPrepayments ?? 0));
-
-
-            if (balance < decimal.Zero)
-            {
-                SOShipmentCreditHold shipmentExt = shipment.GetExtension<SOShipmentCreditHold>();
-                e.Cache.SetValueExt<SOShipmentCreditHold.usrCreditHold>(shipmentExt.UsrCreditHold, true);
-                SOShipmentCreditHold.MyEvents
-                    .Select(events => events.CreditLimitViolated)
-                    .FireOn(Base, shipment);
-                // PXEntityEventBase<ARBalances>.Container<ARBalancesCreditHoldExt.MyEvents>.Select(ev => ev.CreditLimitViolated).FireOn(Base, row);
-            }
-            if (balance > decimal.Zero)
-            {
-                SOShipmentCreditHold shipmentExt = shipment.GetExtension<SOShipmentCreditHold>();
-                e.Cache.SetValueExt<SOShipmentCreditHold.usrCreditHold>(shipmentExt.UsrCreditHold, false);
-                SOShipmentCreditHold.MyEvents
-                    .Select(events => events.CreditLimitSatisfied)
-                    .FireOn(Base, shipment);
-                //PXEntityEventBase<ARBalances>.Container<ARBalancesCreditHoldExt.MyEvents>.Select(ev => ev.CreditLimitViolated).FireOn(Base, row);
-            }
-            if (row.CurrentBal == 0) return;
-        }
-
-        protected virtual void _(Events.RowUpdated<SOShipment> e, PXRowUpdated b)
+        protected virtual void _(Events.RowPersisting<SOShipment> e, PXRowPersisting b)
         {
             b?.Invoke(e.Cache, e.Args);
             SOShipment row = e.Row;
             if (row == null) return;
 
-            ARBalances remBal = SelectFrom<ARBalances>.
-            Where<ARBalances.customerID.IsEqual<P.AsInt>.
-            And<ARBalances.customerLocationID.IsEqual<P.AsInt>>>.View.Select(Base, row.CustomerID, row.CustomerLocationID);
+            SOShipmentCreditHold rowExt = row.GetExtension<SOShipmentCreditHold>();
 
-            if (remBal == null) return;
-
-            Customer customer = SelectFrom<Customer>.
-                Where<Customer.bAccountID.IsEqual<P.AsInt>>.View.Select(Base, row.CustomerID);
-            if (customer == null) return;
-
-            var creditLimit = customer.CreditLimit;
-            var balance = creditLimit - ((remBal.CurrentBal ?? 0) + (remBal.TotalOpenOrders ?? 0) + (remBal.TotalShipped ?? 0) - (remBal.TotalPrepayments ?? 0));
-
-            if (balance < 0)
+            if (rowExt.UsrCreditHold != true)
             {
-                SOShipmentCreditHold rowExt = row.GetExtension<SOShipmentCreditHold>();
-                e.Cache.SetValueExt<SOShipmentCreditHold.usrCreditHold>(rowExt.UsrCreditHold, true);
+                
+            
 
-                SOShipmentCreditHold.MyEvents
-                    .Select(events => events.CreditLimitViolated)
-                    .FireOn(Base, row);
+                var query = SelectFrom<SOShipment>
+                    .InnerJoin<Customer>
+                      .On<Customer.bAccountID.IsEqual<P.AsInt>>
+                    .InnerJoin<ARBalances>
+                      .On<ARBalances.customerID.IsEqual<P.AsInt>>
+                    .AggregateTo<GroupBy<SOShipment.customerID, Avg<Customer.creditLimit>>>.View.Select(Base, row.CustomerID, row.CustomerID);
 
+
+
+                foreach (PXResult<SOShipment, Customer, ARBalances> result in query)
+                {
+                    if (rowExt.UsrCreditHold != true)
+                    {
+                        SOShipment shipment = result;
+                        Customer cust = result;
+                        ARBalances arBal = result;
+
+                        decimal? currentBalSum = arBal.CurrentBal ?? 0m;
+                        decimal? totalOpenOrdersSum = arBal.TotalOpenOrders ?? 0m;
+                        decimal? totalShippedSum = arBal.TotalShipped ?? 0m;
+                        decimal? totalPrepaymentsSum = arBal.TotalPrepayments ?? 0m;
+                        decimal? creditLimit = cust.CreditLimit ?? 0m;
+
+                        decimal? bal = creditLimit - ((currentBalSum + totalOpenOrdersSum + totalShippedSum) - totalPrepaymentsSum);
+                        if (bal > decimal.Zero)
+                        {
+                            rowExt.UsrCreditHold = true;
+
+                            SOShipmentCreditHold.MyEvents
+                            .Select(events => events.CreditLimitViolated)
+                            .FireOn(Base, row);
+                        }
+
+                    }
+                }
             }
-
-
 
         }
 
@@ -214,8 +192,6 @@ namespace NCRLog
             b?.Invoke(e.Cache, e.Args);
 
             PXUIFieldAttribute.SetEnabled<SOShipment.lineTotal>(e.Cache, row, false);
-
-            e.Cache.SetDefaultExt<SOShipmentCreditHold.usrCreditHold>(row);
         }
         #endregion
 

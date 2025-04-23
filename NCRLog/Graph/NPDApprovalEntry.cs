@@ -16,6 +16,8 @@ using PX.Objects.IN;
 using PX.Objects.TX;
 using System;
 using static PX.Objects.EP.EPApprovalProcess;
+using PX.Data.WorkflowAPI;
+using PX.Objects.GL;
 
 namespace NCRLog
 {
@@ -46,8 +48,7 @@ namespace NCRLog
 
         public SelectFrom<NPDRisks>.
             Where<NPDRisks.projectNo.IsEqual<NPDResearch.projectNo.FromCurrent>.
-                And<NPDRisks.productTitle.IsEqual<NPDResearch.productTitle.FromCurrent>.
-                    And<NPDRisks.findingID.IsEqual<NPDResearch.findingID.FromCurrent>>>>.View Risks;
+                And<NPDRisks.productTitle.IsEqual<NPDResearch.productTitle.FromCurrent>>>.View Risks;
 
         public SelectFrom<NPDStakeholder>.
             Where<NPDStakeholder.projectNo.IsEqual<NPDHeader.projectNo.FromCurrent>.
@@ -125,14 +126,21 @@ namespace NCRLog
         [PXUIField(DisplayName = "Go To Introductory")]
         protected virtual IEnumerable toIntroductory(PXAdapter adapter)
             => adapter.Get();
+
+        public PXAction<NPDHeader> IntroToResearch;
+        [PXButton]
+        [PXUIField(DisplayName = "Research")]
+        protected virtual IEnumerable introToResearch(PXAdapter adapter)
+            => adapter.Get();
         #endregion
 
-        public PXAction<NPDDesignMatlCost> CreateInventoryItem;
+        /*public PXAction<NPDDesignMatlCost> CreateInventoryItem;
         [PXButton]
         [PXUIField(DisplayName = "Create Inventory")]
         public virtual IEnumerable createInventoryItem(PXAdapter adapter)
         {
-            if (this.DesignMatlCost.Current == null)
+
+            if (this.DesignMatlCost == null)
             {
                 // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
                 throw new PXSetPropertyException<NPDDesignMatlCost.nonInventoryID>("Current Records are empty, please fill in and try again", PXErrorLevel.Error);
@@ -142,48 +150,81 @@ namespace NCRLog
             foreach (NPDDesignMatlCost line in this.DesignMatlCost.Select())
             {
                 if (line.Selected == true)
-                {
+                { 
                     try
                     {
                         InventoryItemMaint itemMaint = PXGraph.CreateInstance<InventoryItemMaint>();
-                        var header = new InventoryItem();
-                        header.InventoryCD = line.NonInventoryID;
-                        header.Descr = line.NonInventoryID + line.ProjectNo + line.ProductTitle;
-                        itemMaint.Item.Insert(header);
+                        InventoryItem item = itemMaint.Item.Insert(new InventoryItem());
 
-                        var settings = header;
-                        settings.ItemClassID = 103;
-                        settings.TaxCategoryID = "STANDARD";
-                        settings.PostClassID = "COMPONENTS";
-                        settings.LotSerClassID = "NOTTRACKED";
-                        settings.BaseUnit = line.Uom;
-                        settings.SalesUnit = line.Uom;
-                        settings.PurchaseUnit = line.Uom;
-                        settings.InvtAcctID = 1001;
-                        settings.SalesAcctID = 4000;
-                        settings.COGSAcctID = 5020;
-                        settings.StdCstVarAcctID = 5090;
-                        settings.POAccrualAcctID = 2109;
-                        itemMaint.ItemSettings.Insert(settings);
+                        Account Stock = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "1001");
+                        Account COGS = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "5020");
+                        Account Sales = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "4000");
+                        Account SCV = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "5090");
+                        Account PPV = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "5091");
+                        Account Accrual = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "2109");
+                        Account SCRev = SelectFrom<Account>.
+                        Where<Account.accountCD.IsEqual<P.AsString>>.View.Select(this, "5092");
+
+                        if (item != null)
+                        {
+                            item.InventoryCD = line.NonInventoryID;
+                            item.Descr = $"{line.NonInventoryID}  {line.ProductTitle}  {line.ProjectNo}";
+                            item.ItemClassID = 103;
+                            item.TaxCategoryID = "STANDARD";
+                            item.PostClassID = "COMPONENTS";
+                            item.LotSerClassID = "NOTTRACKED";
+                            item.BaseUnit = line.Uom;
+                            item.SalesUnit = line.Uom;
+                            item.PurchaseUnit = line.Uom;
+                            item.StkItem = true;
+                            item.ItemStatus = INItemStatus.Active;
+                            item.InvtAcctID = Stock.AccountID;
+                            item.COGSAcctID = COGS.AccountID;
+                            item.PPVAcctID = PPV.AccountID;
+                            item.StdCstVarAcctID = SCV.AccountID;
+                            item.SalesAcctID = Sales.AccountID;
+                            item.POAccrualAcctID = Accrual.AccountID;
+                            item.StdCstRevAcctID = SCRev.AccountID;
+                            
+                        };
+
+                        itemMaint.Item.Update(item);
 
                         itemMaint.Actions.PressSave();
 
+                        PXTrace.WriteInformation($"Inventory Item {item.InventoryCD} created successfully.");
+                        
                         throw new PXRedirectRequiredException(itemMaint, "Redirect Successful");
+
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
-                        // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
-                        // Acuminator disable once PX1051 NonLocalizableString [Justification]
-                        throw new PXSetPropertyException<NPDDesignMatlCost.nonInventoryID>(ex.Message, PXErrorLevel.Error);
+                        if(ex.Message.IndexOf("Redirect Successful", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            PXTrace.WriteError($"Error creating Inventory Item: {ex.Message}");
+                            // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
+                            throw new PXSetPropertyException<NPDDesignMatlCost.nonInventoryID>(
+                                $"Error creating Inventory Item for {line.NonInventoryID}: {ex.Message}", PXErrorLevel.Warning);
+                        }
+                        
                     }
-                    
+
                 }
-                else continue;
             }
 
 
             return adapter.Get();
-        }
+        }*/
         #endregion
 
         #region Events
@@ -241,17 +282,7 @@ namespace NCRLog
 
         }
 
-       /* protected virtual void _(Events.RowSelecting<NPDHeader> e)
-        {
-            NPDHeader row = e.Row;
-            if (row == null) return;
-
-            e.Cache.SetDefaultExt<NPDHeader.awaitingApproval>(row);
-            e.Cache.SetDefaultExt<NPDHeader.introductoryNP>(row);
-            e.Cache.SetDefaultExt<NPDHeader.designNP>(row);
-            e.Cache.SetDefaultExt<NPDHeader.feasibilityNP>(row);
-            e.Cache.SetDefaultExt<NPDHeader.researchNP>(row);
-        }*/
+       
 
         protected virtual void _(Events.FieldUpdated<NPDStakeholder, NPDStakeholder.stakeholderID> e)
         {

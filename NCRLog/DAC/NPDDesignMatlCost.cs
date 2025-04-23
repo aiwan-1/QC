@@ -1,5 +1,6 @@
 using System;
 using PX.Data;
+using PX.Data.BQL;
 using PX.Data.ReferentialIntegrity.Attributes;
 using PX.Objects.IN;
 
@@ -9,10 +10,6 @@ namespace NCRLog
     [PXCacheName("NPDDesignMatlCost")]
     public class NPDDesignMatlCost : PXBqlTable, IBqlTable
     {
-
-        // TODO: Capex field
-        // TODO: Opex field
-        // TODO: Total Cost fields, Opex, Capex, Material, Total
         #region Keys
         public class PK : PrimaryKeyOf<NPDDesignMatlCost>.By<projectNo, productTitle, matlLineNbr>
         {
@@ -76,7 +73,8 @@ namespace NCRLog
         [PXDBDecimal(6)]
         [PXUIField(DisplayName = "Ext Cost")]
         [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
-        [PXFormula(typeof(Mult<unitCost,quantity>))]
+        [PXFormula(typeof(Mult<unitCost,quantity>),
+            typeof(SumCalc<NPDHeader.totalMaterialCost>))]
         public virtual Decimal? ExtCost { get; set; }
         public abstract class extCost : PX.Data.BQL.BqlDecimal.Field<extCost> { }
         #endregion
@@ -103,6 +101,67 @@ namespace NCRLog
         public virtual bool? Selected { get; set; }
         public abstract class selected : PX.Data.BQL.BqlBool.Field<selected> { }
         #endregion
+
+        #region Opex
+        public abstract class opex : BqlDecimal.Field<opex> { }
+
+        [PXDBDecimal(6)]
+        [PXFormula(null,
+            typeof(SumCalc<NPDHeader.totalOpex>))]
+        [PXDefault(TypeCode.Decimal, "0.0", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Opex")]
+        public virtual decimal? Opex
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region Capex
+        public abstract class capex : BqlDecimal.Field<capex> { }
+
+        [PXDBDecimal(6)]
+        [PXFormula(null,
+            typeof(SumCalc<NPDHeader.totalCapex>))]
+        [PXDefault(TypeCode.Decimal, "0.0", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Capex")]
+        public virtual decimal? Capex
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region Expenditure
+        public abstract class expenditure : BqlDecimal.Field<expenditure> { }
+
+        [PXDBDecimal(6)]
+        [PXDefault(TypeCode.Decimal, "0.0", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXFormula(typeof(Add<capex, opex>))]
+        [PXUIField(DisplayName = "Expenditure")]
+        public virtual decimal? Expenditure
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region TotalCost
+        public abstract class totalCost : BqlDecimal.Field<totalCost> { }
+
+        [PXDBDecimal(6)]
+        [PXDefault(TypeCode.Decimal, "0.0", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXFormula(typeof(Add<expenditure, extCost>),
+            typeof(SumCalc<NPDHeader.totalCost>))]
+        [PXUIField(DisplayName = "Total Cost")]
+        public virtual decimal? TotalCost
+        {
+            get;
+            set;
+        }
+        #endregion
+
+
 
         #region CreatedByID
         [PXDBCreatedByID()]

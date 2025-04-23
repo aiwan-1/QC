@@ -267,6 +267,75 @@ namespace NCRLog
         }
         #endregion
 
+        #region TotalCost
+        public abstract class totalCost : BqlDecimal.Field<totalCost> { }
+
+        [PXDBDecimal(6)]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Total Cost", Enabled = false)]
+        public virtual decimal? TotalCost
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region Expenditure
+        public abstract class expenditure : BqlDecimal.Field<expenditure> { }
+
+        [PXDBDecimal(6)]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Expenditure", Visible = false)]
+        public virtual decimal? Expenditure
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region TotalOpex
+        public abstract class totalOpex : BqlDecimal.Field<totalOpex> { }
+
+        [PXDBDecimal(6)]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Total Opex", Enabled = false)]
+        public virtual decimal? TotalOpex
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region TotalCapex
+        public abstract class totalCapex : BqlDecimal.Field<totalCapex> { }
+
+        [PXDBDecimal(6)]
+        [PXFormula(null,
+            typeof(SumCalc<NPDDesignMatlCost.capex>))]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Total Capex", Enabled = false)]
+        public virtual decimal? TotalCapex
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region TotalMaterialCost
+        public abstract class totalMaterialCost : BqlDecimal.Field<totalMaterialCost> { }
+
+        [PXDBDecimal(6)]
+        [PXFormula(null,
+            typeof(SumCalc<NPDDesignMatlCost.extCost>))]
+        [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
+        [PXUIField(DisplayName = "Total Material Cost", Enabled = false)]
+        public virtual decimal? TotalMaterialCost
+        {
+            get;
+            set;
+        }
+        #endregion
+
 
         #region Non-Persisted
         #region AwaitingApproval

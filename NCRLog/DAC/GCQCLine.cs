@@ -3,7 +3,6 @@ using PX.Data.ReferentialIntegrity.Attributes;
 using PX.Data;
 using System;
 using PX.Objects.SO;
-using GILCustomizations;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

@@ -12,6 +12,7 @@ using PX.Common;
 using PX.SM;
 using PX.Data.BQL;
 using PX.Data.BQL.Fluent;
+using PX.Objects.PO;
 
 namespace NCRLog
 {
@@ -25,6 +26,7 @@ namespace NCRLog
             Configure(config.GetScreenConfigurationContext<NPDApprovalEntry,
                 NPDHeader>());
         }
+        
 
         protected static void Configure(WorkflowContext<NPDApprovalEntry,
             NPDHeader> context)
@@ -69,7 +71,7 @@ namespace NCRLog
                     #region FlowStates
                     .WithFlowStates(flowStates =>
                     {
-
+                        
                         flowStates.Add<State.introductory>(flowstate =>
                         {
 
@@ -77,15 +79,20 @@ namespace NCRLog
                             .IsInitial()
                             .WithActions(actions =>
                             {
-                                actions.Add(g => g.ApproveIntroductory, a => a
+                               /* actions.Add(g => g.ApproveIntroductory, a => a
                                     .IsDuplicatedInToolbar()
                                     .WithConnotation(ActionConnotation.Success)
                                     
-                                );
+                                );*/
 
                                 actions.Add(g => g.Reject, a => a
                                     .IsDuplicatedInToolbar()
                                     .WithConnotation(ActionConnotation.Danger)
+                                );
+
+                                actions.Add(g => g.IntroToResearch, a => a
+                                    .IsDuplicatedInToolbar()
+                                    .WithConnotation(ActionConnotation.Info)
                                 );
                             })
                             .WithFieldStates(fs =>
@@ -277,9 +284,11 @@ namespace NCRLog
                     #region Transitions
                     .WithTransitions(transitons =>
                     {
+
+
                         transitons.Add(t => t.From<State.introductory>()
                             .To<State.research>()
-                            .IsTriggeredOn(g => g.ToResearch)
+                            .IsTriggeredOn(g => g.IntroToResearch)
                             .WithFieldAssignments(fas =>
                             {
                                 fas.Add<NPDHeader.introductory>(true);
@@ -422,6 +431,12 @@ namespace NCRLog
                     actions.Add(g => g.ToDesign, c => c
                         .WithCategory(processingCategory)
                     );
+
+                    actions.Add(g => g.IntroToResearch, c => c
+                        .WithCategory(processingCategory)
+                        .IsDisabledWhen(conditions.NotIntro)
+                    );
+                    
                 })
 
                 .WithForms( forms => forms
@@ -438,7 +453,11 @@ namespace NCRLog
         public class Conditions : Condition.Pack
         {
             public Condition ResearchNotApproved => GetOrCreate(b => b.
-                FromBql<Where<NPDHeader.research.IsEqual<False>>>()
+                FromBql<Where<NPDHeader.research.IsNotEqual<True>>>()
+            );
+
+            public Condition NotIntro => GetOrCreate(b => b.
+                FromBql<Where<NPDHeader.status.IsNotEqual<NPD.NPDApprovalStatus.introductory>>>()
             );
         }
         #endregion
