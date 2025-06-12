@@ -3,6 +3,7 @@ using PX.Data;
 using PX.Data.BQL;
 using PX.Data.ReferentialIntegrity.Attributes;
 using static NCRLog.NPD;
+using PX.Objects;
 using PX.Objects.AM;
 using static NCRLog.NPDHeader;
 using PX.Objects.CS;
@@ -13,7 +14,7 @@ namespace NCRLog
     [Serializable]
     [PXCacheName("NPDHeader")]
     [PXPrimaryGraph(typeof(NPDApprovalEntry))]
-    public class NPDHeader : PXBqlTable, IBqlTable
+    public class NPDHeader : PXBqlTable, IBqlTable, INotable
     {
         #region Keys
         public class PK : PrimaryKeyOf<NPDHeader>.By<projectNo, productTitle>
@@ -138,7 +139,7 @@ namespace NCRLog
         public abstract class approvedBy : BqlString.Field<approvedBy> { }
 
         [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Approved By")]
+        [PXUIField(DisplayName = "Approved By", Enabled = false)]
         public virtual string ApprovedBy
         {
             get;
@@ -150,7 +151,7 @@ namespace NCRLog
         public abstract class approvedByIntroductory : BqlString.Field<approvedByIntroductory> { }
 
         [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Approved By (Introductory)")]
+        [PXUIField(DisplayName = "Approved By (Introductory)", Enabled = false)]
         public virtual string ApprovedByIntroductory
         {
             get;
@@ -162,7 +163,7 @@ namespace NCRLog
         public abstract class approvedByResearch : BqlString.Field<approvedByResearch> { }
 
         [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Approved By (Research)")]
+        [PXUIField(DisplayName = "Approved By (Research)", Enabled = false)]
         public virtual string ApprovedByResearch
         {
             get;
@@ -174,7 +175,7 @@ namespace NCRLog
         public abstract class approvedByDesign : BqlString.Field<approvedByDesign> { }
 
         [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Approved By (Design)")]
+        [PXUIField(DisplayName = "Approved By (Design)", Enabled = false)]
         public virtual string ApprovedByDesign
         {
             get;
@@ -235,7 +236,7 @@ namespace NCRLog
         public abstract class approvedByFeasibility : BqlString.Field<approvedByFeasibility> { }
 
         [PXDBString(64, IsUnicode = true)]
-        [PXUIField(DisplayName = "Approved By (Feasibility)")]
+        [PXUIField(DisplayName = "Approved By (Feasibility)", Enabled = false)]
         public virtual string ApprovedByFeasibility
         {
             get;
@@ -330,6 +331,78 @@ namespace NCRLog
         [PXDefault(TypeCode.Decimal, "0.00", PersistingCheck = PXPersistingCheck.Nothing)]
         [PXUIField(DisplayName = "Total Material Cost", Enabled = false)]
         public virtual decimal? TotalMaterialCost
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region IntroDate
+        public abstract class introDate : BqlDateTime.Field<introDate> { }
+
+        [PXDBDate()]
+        [PXUIField(DisplayName = "Introductory Due Date")]
+        public virtual DateTime? IntroDate
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region ResearchDate
+        public abstract class researchDate : BqlDateTime.Field<researchDate> { }
+
+        [PXDBDate()]
+        [PXUIField(DisplayName = "Research Due Date")]
+        public virtual DateTime? ResearchDate
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region DesignDate
+        public abstract class designDate : BqlDateTime.Field<designDate> { }
+
+        [PXDBDate()]
+        [PXUIField(DisplayName = "Design Due Date")]
+        public virtual DateTime? DesignDate
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region FeasibilityDate
+        public abstract class feasibilityDate : BqlDateTime.Field<feasibilityDate> { }
+
+        [PXDBDate()]
+        [PXUIField(DisplayName = "Feasibility Due Date")]
+        public virtual DateTime? FeasibilityDate
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region CustInv
+        public abstract class custInv : BqlBool.Field<custInv> { }
+
+        [PXDBBool]
+        [PXUIField(DisplayName = "Customer Involved?")]
+        public virtual bool? CustInv
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region SupInv
+        public abstract class supInv : BqlBool.Field<supInv> { }
+
+        [PXDBBool]
+        [PXUIField(DisplayName = "Supplier Involved")]
+        public virtual bool? SupInv
         {
             get;
             set;
@@ -463,10 +536,10 @@ namespace NCRLog
         public abstract class tstamp : PX.Data.BQL.BqlByteArray.Field<tstamp> { }
         #endregion
 
-        #region Noteid
+        #region NoteID
         [PXNote()]
-        public virtual Guid? Noteid { get; set; }
-        public abstract class noteid : PX.Data.BQL.BqlGuid.Field<noteid> { }
+        public virtual Guid? NoteID { get; set; }
+        public abstract class noteID : PX.Data.BQL.BqlGuid.Field<noteID> { }
         #endregion
     }
 

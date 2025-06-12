@@ -110,6 +110,9 @@
     <Compile Include="Workflow\SOShipmentEntry_WorkflowExt.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AcuSharp">
+      <Version>25.1.1</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
       <Version>5.0.0</Version>
     </PackageReference>

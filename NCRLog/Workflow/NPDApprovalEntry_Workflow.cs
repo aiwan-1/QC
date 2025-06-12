@@ -252,10 +252,6 @@ namespace NCRLog
                                     .WithConnotation(ActionConnotation.Light)
                                 );
 
-                                actions.Add(g => g.ToIntro, a => a
-                                    .WithConnotation(ActionConnotation.Light)
-                                );
-
                                 actions.Add(g => g.ToFeasibility, a => a
                                     .WithConnotation(ActionConnotation.Light)
                                 );
@@ -273,7 +269,6 @@ namespace NCRLog
                                 fs.AddTable<NPDStakeholder>(a => a.IsDisabled());
                                 fs.AddTable<NPDResearch>(a => a.IsDisabled());
                                 fs.AddTable<NPDRisks>(a => a.IsDisabled());
-                                fs.AddTable<NPDHeader>(a => a.IsDisabled());
                             });
 
                         })
@@ -362,6 +357,20 @@ namespace NCRLog
                             .IsTriggeredOn(g => g.ToDesign)
                         );
 
+                        transitons.Add(t => t.From<State.rejected>()
+                            .To<State.research>()
+                            .IsTriggeredOn(g => g.ToResearch)
+                        );
+
+                        transitons.Add(t => t.From<State.rejected>()
+                            .To<State.design>()
+                            .IsTriggeredOn(g => g.ToDesign)
+                        );
+
+                        transitons.Add(t => t.From<State.rejected>()
+                            .To<State.feasibility>()
+                            .IsTriggeredOn(g => g.ToFeasibility)
+                        );
 
                     });
                     #endregion
@@ -395,11 +404,7 @@ namespace NCRLog
                         .WithCategory(processingCategory)
                         
                     );
-                    actions.Add(g => g.ApproveIntroductory, c => c
-                        .WithCategory(processingCategory)
-                       
-                    );
-
+                    
                     actions.Add(g => g.ApproveResearch, c => c
                         .WithCategory(processingCategory)
                         
@@ -430,11 +435,17 @@ namespace NCRLog
 
                     actions.Add(g => g.ToDesign, c => c
                         .WithCategory(processingCategory)
+                        .IsDisabledWhen(conditions.ResearchNotApproved)
                     );
 
                     actions.Add(g => g.IntroToResearch, c => c
                         .WithCategory(processingCategory)
                         .IsDisabledWhen(conditions.NotIntro)
+                    );
+
+                    actions.Add(g => g.ToFeasibility, c => c
+                        .WithCategory(processingCategory)
+                        .IsDisabledWhen(conditions.DesignNotApproved)
                     );
                     
                 })
@@ -458,6 +469,10 @@ namespace NCRLog
 
             public Condition NotIntro => GetOrCreate(b => b.
                 FromBql<Where<NPDHeader.status.IsNotEqual<NPD.NPDApprovalStatus.introductory>>>()
+            );
+
+            public Condition DesignNotApproved => GetOrCreate(b => b.
+                FromBql<Where<NPDHeader.design.IsNotEqual<True>>>()
             );
         }
         #endregion

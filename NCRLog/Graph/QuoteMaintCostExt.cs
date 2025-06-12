@@ -5,7 +5,9 @@ using PX.Objects.CM;
 using PX.Objects.CM.Extensions;
 using PX.Objects.CR;
 using PX.Objects.IN;
+using PX.Data.WorkflowAPI;
 using static PX.Objects.CR.QuoteMaint;
+using System.CodeDom;
 
 namespace QualityControl
 {
@@ -22,6 +24,9 @@ namespace QualityControl
             var quote = Base.Products.Current;
             if (quote.QuoteID == null) return;
             var lines = Base.Products.Select();
+            if(lines == null )
+                // Acuminator disable once PX1050 HardcodedStringInLocalizationMethod [Justification]
+                throw new PXSetPropertyException<CRQuote.quoteID>("No lines to process");
             foreach(CROpportunityProducts product in lines)
             {
                 if (product.POCreate == true) continue;
@@ -117,5 +122,6 @@ namespace QualityControl
 
             }
         }*/
+
     }
 }

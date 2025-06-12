@@ -1,6 +1,7 @@
 ﻿using PX.Data;
 using PX.Data.BQL.Fluent;
 using PX.Data.BQL;
+using PX.Objects.CR.Extensions;
 using PX.Data.Update.ExchangeService;
 using PX.Objects.EP;
 using System.Collections;
@@ -15,9 +16,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using PX.Objects.IN;
 using PX.Objects.TX;
 using System;
-using static PX.Objects.EP.EPApprovalProcess;
 using PX.Data.WorkflowAPI;
 using PX.Objects.GL;
+using PX.Objects.CR;
 
 namespace NCRLog
 {
@@ -67,12 +68,6 @@ namespace NCRLog
 
         #region Actions
         #region Workflow Actions
-        public PXAction<NPDHeader> ApproveIntroductory;
-        [PXButton]
-        [PXUIField(DisplayName = "Approve Introductory")]
-        protected virtual IEnumerable approveIntroductory(PXAdapter adapter)
-            => adapter.Get();
-
         public PXAction<NPDHeader> ApproveDesign;
         [PXButton]
         [PXUIField(DisplayName = "Approve Design")]
@@ -101,7 +96,11 @@ namespace NCRLog
         [PXButton]
         [PXUIField(DisplayName = "Reject")]
         protected virtual IEnumerable reject(PXAdapter adapter)
-            => adapter.Get();
+        {
+            //this.Caches.Clear();
+            this.Clear();
+            return adapter.Get();
+        }
 
         public PXAction<NPDHeader> ToResearch;
         [PXButton]
@@ -235,51 +234,6 @@ namespace NCRLog
 
             row.Version++;
 
-            /*if (row.Status == NPDApprovalStatus.Awaiting || row.Status == NPDApprovalStatus.Approved)
-            {
-                row.AwaitingApproval = true;
-            }
-            else
-            {
-                row.AwaitingApproval = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Design)
-            {
-                row.DesignNP = true;
-            }
-            else
-            {
-                row.DesignNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Introductory)
-            {
-                row.IntroductoryNP = true;
-            }
-            else
-            {
-                row.IntroductoryNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Research)
-            {
-                row.ResearchNP = true;
-            }
-            else
-            {
-                row.ResearchNP = false;
-            }
-
-            if (row.Status == NPDApprovalStatus.Feasibility)
-            {
-                row.FeasibilityNP = true;
-            }
-            else
-            {
-                row.FeasibilityNP = false;
-            }*/
-
         }
 
        
@@ -313,12 +267,6 @@ namespace NCRLog
             ApproveResearch.SetEnabled(IsNPDApprover("NPDApprover", this));
             Approve.SetEnabled(IsNPDApprover("NPDApprover", this));
 
-            PXUIFieldAttribute.SetEnabled<NPDHeader.approvedBy>(e.Cache, row, false);
-            PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByDesign>(e.Cache, row, false);
-            PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByFeasibility>(e.Cache, row, false);
-            PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByIntroductory>(e.Cache, row, false);
-            PXUIFieldAttribute.SetEnabled<NPDHeader.approvedByResearch>(e.Cache, row, false);
-
             PXUIFieldAttribute.SetVisible<NPDHeader.awaitingApproval>(e.Cache, row, IsAdmin("Administrator", this));
             PXUIFieldAttribute.SetVisible<NPDHeader.designNP>(e.Cache, row, IsAdmin("Administrator", this)); 
             PXUIFieldAttribute.SetVisible<NPDHeader.feasibilityNP>(e.Cache, row, IsAdmin("Administrator", this));
@@ -330,6 +278,11 @@ namespace NCRLog
             e.Cache.SetDefaultExt<NPDHeader.designNP>(row);
             e.Cache.SetDefaultExt<NPDHeader.feasibilityNP>(row);
             e.Cache.SetDefaultExt<NPDHeader.researchNP>(row);
+
+            PXUIFieldAttribute.SetEnabled<NPDHeader.introDate>(e.Cache, row, IsNPDApprover("NPDApprover", this));
+            PXUIFieldAttribute.SetEnabled<NPDHeader.designDate>(e.Cache, row, IsNPDApprover("NPDApprover", this));
+            PXUIFieldAttribute.SetEnabled<NPDHeader.researchDate>(e.Cache, row, IsNPDApprover("NPDApprover", this));
+            PXUIFieldAttribute.SetEnabled<NPDHeader.feasibilityDate>(e.Cache, row, IsNPDApprover("NPDApprover", this));
         }
 
         protected virtual void _(Events.FieldUpdated<NPDHeader, NPDHeader.status> e)
@@ -362,6 +315,7 @@ namespace NCRLog
                 e.Cache.SetValueExt<NPDHeader.approvedBy>(row, Accessinfo.DisplayName);
             }
 
+            return;
         }
 
         protected virtual void _(Events.FieldUpdated<NPDDesignMatlCost, NPDDesignMatlCost.inventoryID> e)
@@ -404,4 +358,19 @@ namespace NCRLog
         }
         #endregion
     }
+
+    #region GraphExtInit
+    // Acuminator disable once PX1016 ExtensionDoesNotDeclareIsActiveMethod extension should be constantly active
+    public class NPDApprovalEntry_ActivitiesExt : ActivityDetailsExt<NPDApprovalEntry, NPDHeader, NPDHeader.noteID>
+    {
+
+    }
+
+    // Acuminator disable once PX1016 ExtensionDoesNotDeclareIsActiveMethod extension should be constantly active
+    public class NPDApprovalEntry_Activities_ActionsExt : ActivityDetailsExt_Actions<NPDApprovalEntry_ActivitiesExt, NPDApprovalEntry, NPDHeader, NPDHeader.noteID>
+    { 
+
+    }
+
+    #endregion
 }

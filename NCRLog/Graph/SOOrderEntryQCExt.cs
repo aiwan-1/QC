@@ -26,8 +26,7 @@ namespace NCRLog
         public SelectFrom<GCQCLine>.
             RightJoin<GCQCRecord>.
             On<GCQCRecord.docNbr.IsEqual<GCQCLine.docNbr>>.
-            Where<GCQCRecord.sOOrderNbr.IsEqual<SOOrder.orderNbr.FromCurrent>.
-                And<GCQCLine.panelRef.IsNotNull>>.View.ReadOnly QCDetails;
+            Where<GCQCRecord.sOOrderNbr.IsEqual<SOOrder.orderNbr.FromCurrent>>.View.ReadOnly QCDetails;
 
         public SelectFrom<ISORecord>.
              Where<ISORecord.sOOrderNbr.IsEqual<SOOrder.orderNbr.FromCurrent>>.View.ReadOnly ISO;

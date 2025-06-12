@@ -19,8 +19,8 @@ namespace NCRLog
 
 		[PXDBString(15, IsUnicode = true)]
         [PXSelector(typeof(SearchFor<ISORecord.docType>.Where<ISORecord.docType.IsEqual<Messages.nCR>>),
-            typeof(ISORecord.docType),
             typeof(ISORecord.docNumber),
+            typeof(ISORecord.docType),
             typeof(ISORecord.sOOrderNbr), ValidateValue = false)]
 		[PXUIField(DisplayName = "NCR Number", Enabled = false)]
 		public virtual string UsrNCRNumber
@@ -35,8 +35,8 @@ namespace NCRLog
 
         [PXDBString(15, IsUnicode = true)]
         [PXSelector(typeof(SearchFor<ISORecord.docType>.Where<ISORecord.docType.IsEqual<Messages.eCN>>),
-            typeof(ISORecord.docType),
             typeof(ISORecord.docNumber),
+            typeof(ISORecord.docType),
             typeof(ISORecord.sOOrderNbr), ValidateValue = false)]
         [PXUIField(DisplayName = "ECN Number", Enabled = false)]
         public virtual string UsrECNNumber
